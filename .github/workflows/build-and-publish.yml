@@ -41,7 +41,6 @@ jobs:
         id: determine_bump
         uses: actions/github-script@v4
         with:
-          github-token: ${{ secrets.BUILD_TOKEN }}
           script: |
             const { commits } = await github.repos.listCommits({
               owner: context.repo.owner,
