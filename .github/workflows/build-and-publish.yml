@@ -37,7 +37,7 @@ jobs:
 
       - name: Determine version bump
         id: determine_bump
-        uses: actions/github-script@4
+        uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -81,7 +81,7 @@ jobs:
 
       - name: Create tag
         id: create_tag
-        uses: actions/github-script@4
+        uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -115,5 +115,6 @@ jobs:
       - name: Generate Changelog
         uses: github-changelog-generator/action@v2
         with:
-          tag: ${{ needs.versioning.outputs.create_tag.outputs.tag }}
-          output-filepath: CHANGELOG.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          future-release: ${{ needs.versioning.outputs.tag }}
+          output-file: CHANGELOG.md
