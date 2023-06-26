@@ -31,7 +31,7 @@ jobs:
 
   versioning:
     name: Versioning
-    needs: [ build ]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -106,35 +106,6 @@ jobs:
 
             run();
 
-      - name: Increment version
-        id: increment_version
-        run: echo "::set-output name=version::${{ steps.determine_bump.outputs.bump_type }}"
-
-      - name: Create tag
-        id: create_tag
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { context, github } = require('@actions/github');
-
-            async function run() {
-              const newTag = `v${{ steps.increment_version.outputs.version }}`;
-              try {
-                await github.rest.git.createRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: `refs/tags/${newTag}`,
-                  sha: context.sha
-                });
-                console.log(`::set-output name=tag::${newTag}`);
-              } catch (error) {
-                core.setFailed(`Failed to create tag: ${error.message}`);
-              }
-            }
-
-            run();
-
   changelog:
     name: Generate Changelog
     needs: [versioning]
@@ -147,7 +118,6 @@ jobs:
         run: |
           npm install -g conventional-changelog-cli
           conventional-changelog -p angular -i CHANGELOG.md -s
-          git add CHANGELOG.md
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git commit -m "Update changelog" --no-verify
