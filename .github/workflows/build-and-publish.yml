@@ -1,12 +1,10 @@
-name: Build and Publish
+name: Build and Versioning
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
@@ -97,35 +95,6 @@ jobs:
                   repo: context.repo.repo,
                   ref: `refs/tags/${newTag}`,
                   sha: context.sha
-                });
-                console.log(`::set-output name=tag::${newTag}`);
-              } catch (error) {
-                core.setFailed(`Failed to create tag: ${error.message}`);
-              }
-            }
-
-            run();
-
-      - name: Increment version
-        id: increment_version
-        run: echo "::set-output name=version::${{ steps.determine_bump.outputs.bump_type }}"
-
-      - name: Create tag
-        id: create_tag
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { github: githubContext } = require('@actions/github');
-
-            async function run() {
-              const newTag = `v${{ steps.increment_version.outputs.version }}`;
-              try {
-                await githubContext.rest.git.createRef({
-                  owner: githubContext.context.repo.owner,
-                  repo: githubContext.context.repo.repo,
-                  ref: `refs/tags/${newTag}`,
-                  sha: githubContext.context.sha
                 });
                 console.log(`::set-output name=tag::${newTag}`);
               } catch (error) {
