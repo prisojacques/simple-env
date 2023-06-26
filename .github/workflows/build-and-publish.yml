@@ -31,7 +31,7 @@ jobs:
 
   versioning:
     name: Versioning
-    needs: [build]
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,12 +43,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { context, github } = require('@actions/github');
+            const { github } = require('@actions/github');
 
             async function run() {
               const { data: commits } = await github.rest.repos.listCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
                 per_page: 100
               });
 
@@ -73,6 +73,35 @@ jobs:
               }, 'patch');
 
               console.log(`::set-output name=bump_type::${bumpType}`);
+            }
+
+            run();
+
+      - name: Increment version
+        id: increment_version
+        run: echo "::set-output name=version::${{ steps.determine_bump.outputs.bump_type }}"
+
+      - name: Create tag
+        id: create_tag
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { github } = require('@actions/github');
+
+            async function run() {
+              const newTag = `v${{ steps.increment_version.outputs.version }}`;
+              try {
+                await github.rest.git.createRef({
+                  owner: github.context.repo.owner,
+                  repo: github.context.repo.repo,
+                  ref: `refs/tags/${newTag}`,
+                  sha: github.context.sha
+                });
+                console.log(`::set-output name=tag::${newTag}`);
+              } catch (error) {
+                core.setFailed(`Failed to create tag: ${error.message}`);
+              }
             }
 
             run();
