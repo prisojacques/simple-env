@@ -41,7 +41,7 @@ jobs:
         id: determine_bump
         uses: actions/github-script@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.BUILD_TOKEN }}
           script: |
             const { commits } = await github.repos.listCommits({
               owner: context.repo.owner,
@@ -113,26 +113,3 @@ jobs:
           conventional-changelog -p angular -i CHANGELOG.md -s
           git add CHANGELOG.md
           git commit -m "Update changelog" --no-verify
-
-  publish:
-    name: Publish to NPM
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [changelog]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Get Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: simple-env-dist
-          path: dist
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
