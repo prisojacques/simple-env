@@ -87,16 +87,16 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { github } = require('@actions/github');
+            const { github: githubContext } = require('@actions/github');
 
             async function run() {
               const newTag = `v${{ steps.increment_version.outputs.version }}`;
               try {
-                await github.rest.git.createRef({
-                  owner: github.context.repo.owner,
-                  repo: github.context.repo.repo,
+                await githubContext.rest.git.createRef({
+                  owner: githubContext.context.repo.owner,
+                  repo: githubContext.context.repo.repo,
                   ref: `refs/tags/${newTag}`,
-                  sha: github.context.sha
+                  sha: githubContext.context.sha
                 });
                 console.log(`::set-output name=tag::${newTag}`);
               } catch (error) {
@@ -114,10 +114,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Generate changelog
-        run: |
-          npm install -g conventional-changelog-cli
-          conventional-changelog -p angular -i CHANGELOG.md -s
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git commit -m "Update changelog" --no-verify
+      - name: Generate Changelog
+        uses: github-changelog-generator/action@v2
+        with:
+          tag: ${{ needs.versioning.outputs.create_tag.outputs.tag }}
+          output-filepath: CHANGELOG.md
